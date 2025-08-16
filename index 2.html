@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a"/>
+  <title>SSP‑VA 3.0 • Calculadora de Via Aérea Difícil</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script src="config.js"></script>
+</head>
+<body>
+  <header>
+    <h1 id="title">SSP‑VA 3.0</h1>
+    <p id="subtitle">Calculadora probabilística de via aérea difícil (modelo logístico).</p>
+    <div class="toolbar">
+      <label class="switch">
+        <input type="checkbox" id="ultrasound-toggle">
+        <span class="slider"></span>
+      </label>
+      <span id="us-label">Ultrassom: ON</span>
+
+      <button id="lang-toggle" class="ghost">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="paciente">
+      <h2 data-i18n="patientData">Dados do paciente</h2>
+      <div class="grid2">
+        <label><span data-i18n="patientId">ID</span>: <input id="pid" placeholder="ex.: 12345" /></label>
+        <label><span data-i18n="notes">Observações</span>: <input id="notes" placeholder="opcional" /></label>
+      </div>
+    </section>
+
+    <section id="variaveis">
+      <h2 data-i18n="modelVars">Variáveis do modelo</h2>
+      <div class="cards" id="cards"></div>
+      <div class="actions">
+        <button id="clear" data-i18n="clear">Limpar</button>
+        <button id="preset-low" data-i18n="presetLow">Preset: Baixo risco</button>
+        <button id="preset-high" data-i18n="presetHigh">Preset: Alto risco</button>
+      </div>
+    </section>
+
+    <section id="resultado">
+      <h2 data-i18n="result">Resultado</h2>
+      <div class="result">
+        <div>
+          <div class="prob"><span id="prob">0%</span></div>
+          <div id="risk" class="pill low">Baixo</div>
+        </div>
+        <div class="details">
+          <div>η = β₀ + Σ(βᵢ·xᵢ) = <span id="eta">0.000</span></div>
+          <div>β₀ = <span id="beta0"></span></div>
+          <details>
+            <summary data-i18n="seeContrib">Ver contribuição de cada variável</summary>
+            <table>
+              <thead><tr><th data-i18n="var">Variável</th><th>βᵢ</th><th>xᵢ</th><th>βᵢ·xᵢ</th></tr></thead>
+              <tbody id="table-rows"></tbody>
+            </table>
+          </details>
+        </div>
+      </div>
+      <div class="share">
+        <button id="copy" data-i18n="copy">Copiar resultado</button>
+        <button id="print" data-i18n="print">Imprimir / PDF</button>
+        <button id="install" hidden data-i18n="install">Instalar app</button>
+      </div>
+    </section>
+
+    <section id="sobre">
+      <h2 data-i18n="aboutTitle">Sobre o modelo</h2>
+      <p id="about1">Este app implementa o <strong>SSP‑VA 3.0</strong>, um modelo logístico derivado por simulação informada pela literatura (TMHT, ULBT, abertura &lt;3 cm, TMD&lt;6 cm, mobilidade cervical, NC/TMD&gt;5, achados de ultrassom, etc.). Os coeficientes β devem ser <strong>validados e calibrados</strong> no seu serviço antes de uso rotineiro.</p>
+      <p id="about2"><strong>Interpretação sugerida:</strong> p &lt; 10% (baixo), 10–30% (intermediário), &gt;30% (alto). Ajuste conforme a sua população.</p>
+      <details>
+        <summary data-i18n="seeCoef">Ver coeficientes β</summary>
+        <pre id="coef-json"></pre>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <small id="footerTxt">© 2025 SSP‑VA – Uso educacional. Não substitui julgamento clínico.</small>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    // SW registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+    // Install prompt (PWA)
+    let deferredPrompt;
+    const btnInstall = document.getElementById('install');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btnInstall.hidden = false;
+    });
+    btnInstall?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      btnInstall.hidden = true;
+      deferredPrompt = null;
+    });
+  </script>
+</body>
+</html>
